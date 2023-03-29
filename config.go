@@ -71,5 +71,14 @@ func loadConfig() (*Config, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse config: %w", err)
 	}
+	if passwordEnv := os.Getenv("FEEDSERV_PASSWORD"); passwordEnv != "" {
+		config.Password = passwordEnv
+	} else if passwordFileEnv := os.Getenv("FEEDSERV_PASSWORD_FILE"); passwordFileEnv != "" {
+		pwBytes, err := os.ReadFile(passwordFileEnv)
+		if err != nil {
+			return nil, fmt.Errorf("failed to read password from file: %w", err)
+		}
+		config.Password = string(pwBytes)
+	}
 	return &config, nil
 }
