@@ -12,6 +12,7 @@ import (
 const (
 	JSONFeedMime = "application/feed+json"
 	RSSMime      = "application/rss+xml"
+	AtomMime     = "application/atom+xml"
 )
 
 func writeError(w http.ResponseWriter, status int, error string, args ...any) {
@@ -30,6 +31,8 @@ func (fs *FeedServ) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		mime = JSONFeedMime
 	case ".rss":
 		mime = RSSMime
+	case ".atom":
+		mime = AtomMime
 	default:
 		writeError(w, http.StatusNotFound, "Unsupported feed type %q", ext)
 		return
@@ -52,6 +55,9 @@ func (fs *FeedServ) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	case RSSMime:
 		data = feed.rss
 		hash = feed.rssHash
+	case AtomMime:
+		data = feed.atom
+		hash = feed.atomHash
 	default:
 		panic(fmt.Errorf("incorrect mime %q", mime))
 	}

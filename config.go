@@ -52,6 +52,8 @@ type FeedConfig struct {
 
 	rss      []byte
 	rssHash  string
+	atom     []byte
+	atomHash string
 	json     []byte
 	jsonHash string
 }

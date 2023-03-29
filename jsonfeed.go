@@ -1,10 +1,15 @@
 package main
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
+	"encoding/json"
+	"fmt"
 	"time"
 
 	"maunium.net/go/mautrix/event"
 	"maunium.net/go/mautrix/id"
+	"maunium.net/go/mautrix/util"
 )
 
 const JSONFeedVersion = "https://jsonfeed.org/version/1.1"
@@ -59,4 +64,60 @@ type JSONFeedAttachment struct {
 	Title    string `json:"title,omitempty"`
 	Size     int    `json:"size_in_bytes,omitempty"`
 	Duration int    `json:"duration_in_seconds,omitempty"`
+}
+
+func (fs *FeedServ) generateJSONFeed(feed *FeedConfig) ([]byte, string, error) {
+	feedURL := fs.Config.PublicURL + feed.id + ".json"
+	jsonFeed := &JSONFeed{
+		Version:     JSONFeedVersion,
+		Title:       feed.title,
+		Description: feed.description,
+		Icon:        feed.icon,
+		Homepage:    feed.Homepage,
+		Language:    feed.Language,
+		FeedURL:     feedURL,
+	}
+	jsonFeed.Items, _ = util.MapRingBuffer(feed.entries, func(evtID id.EventID, evt *event.Event) (JSONFeedItem, error) {
+		content := evt.Content.AsMessage()
+		ts := time.UnixMilli(evt.Timestamp).UTC()
+		var attachments []JSONFeedAttachment
+		if content.URL != "" {
+			attachments = append(attachments, JSONFeedAttachment{
+				URL:      fs.Media.GetDownloadURL(content.URL.ParseOrIgnore()),
+				MimeType: content.GetInfo().MimeType,
+				Title:    content.FileName,
+				Size:     content.GetInfo().Size,
+				Duration: content.GetInfo().Duration,
+			})
+		}
+		var editedAt *time.Time
+		if !evt.Mautrix.EditedAt.IsZero() {
+			editedAt = &evt.Mautrix.EditedAt
+		}
+		author, ok := feed.authors[evt.Sender]
+		var authors []JSONFeedAuthor
+		if ok {
+			authors = []JSONFeedAuthor{author}
+		}
+		return JSONFeedItem{
+			ID:   evt.ID.String(),
+			URL:  evt.RoomID.EventURI(evt.ID, fs.Config.homeserverDomain).MatrixToURL(),
+			Text: content.Body,
+			HTML: content.FormattedBody,
+
+			Attachments: attachments,
+			Authors:     authors,
+
+			DatePublished: &ts,
+			DateModified:  editedAt,
+
+			MatrixEvent: evt,
+		}, nil
+	})
+	jsonData, err := json.Marshal(jsonFeed)
+	if err != nil {
+		return nil, "", fmt.Errorf("failed to marshal JSON feed: %w", err)
+	}
+	jsonHash := sha256.Sum256(jsonData)
+	return jsonData, hex.EncodeToString(jsonHash[:]), nil
 }

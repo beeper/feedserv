@@ -16,6 +16,8 @@ func (fs *FeedServ) HandleMetadata(_ mautrix.EventSource, evt *event.Event) {
 	if !ok {
 		return
 	}
+	feed.updateLock.Lock()
+	defer feed.updateLock.Unlock()
 	log := fs.Log.With().
 		Str("room_id", evt.RoomID.String()).
 		Str("sender", evt.Sender.String()).
@@ -70,6 +72,8 @@ func (fs *FeedServ) InitSyncFeed(feed *FeedConfig) {
 		log.Fatal().Err(err).Msg("Failed to fetch room state")
 		return
 	}
+	feed.updateLock.Lock()
+	defer feed.updateLock.Unlock()
 	roomNameEvt := state[event.StateRoomName][""]
 	roomTopicEvt := state[event.StateTopic][""]
 	roomAvatarEvt := state[event.StateRoomAvatar][""]

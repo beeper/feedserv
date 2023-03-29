@@ -1,17 +1,15 @@
 package main
 
 import (
+	"bytes"
 	"crypto/sha256"
 	"encoding/hex"
-	"encoding/json"
 	"time"
 
 	"github.com/rs/zerolog"
 
 	"maunium.net/go/mautrix"
 	"maunium.net/go/mautrix/event"
-	"maunium.net/go/mautrix/id"
-	"maunium.net/go/mautrix/util"
 )
 
 func (fs *FeedServ) HandleFeedEvent(_ mautrix.EventSource, evt *event.Event) {
@@ -62,67 +60,38 @@ func (fs *FeedServ) HandleFeedEvent(_ mautrix.EventSource, evt *event.Event) {
 func (fs *FeedServ) regenerateFeed(feed *FeedConfig, log zerolog.Logger) {
 	log.Debug().Msg("Regenerating feed")
 	start := time.Now()
-	feedURL := fs.Config.PublicURL + feed.id + ".json"
-	jsonFeed := &JSONFeed{
-		Version:     JSONFeedVersion,
-		Title:       feed.title,
-		Description: feed.description,
-		Icon:        feed.icon,
-		Homepage:    feed.Homepage,
-		Language:    feed.Language,
-		FeedURL:     feedURL,
-	}
-	jsonFeed.Items, _ = util.MapRingBuffer(feed.entries, func(evtID id.EventID, evt *event.Event) (JSONFeedItem, error) {
-		content := evt.Content.AsMessage()
-		ts := time.UnixMilli(evt.Timestamp).UTC()
-		var attachments []JSONFeedAttachment
-		if content.URL != "" {
-			attachments = append(attachments, JSONFeedAttachment{
-				URL:      fs.Media.GetDownloadURL(content.URL.ParseOrIgnore()),
-				MimeType: content.GetInfo().MimeType,
-				Title:    content.FileName,
-				Size:     content.GetInfo().Size,
-				Duration: content.GetInfo().Duration,
-			})
-		}
-		var editedAt *time.Time
-		if !evt.Mautrix.EditedAt.IsZero() {
-			editedAt = &evt.Mautrix.EditedAt
-		}
-		author, ok := feed.authors[evt.Sender]
-		var authors []JSONFeedAuthor
-		if ok {
-			authors = []JSONFeedAuthor{author}
-		}
-		return JSONFeedItem{
-			ID:   evt.ID.String(),
-			URL:  evt.RoomID.EventURI(evt.ID, fs.Config.homeserverDomain).MatrixToURL(),
-			Text: content.Body,
-			HTML: content.FormattedBody,
 
-			Attachments: attachments,
-			Authors:     authors,
-
-			DatePublished: &ts,
-			DateModified:  editedAt,
-
-			MatrixEvent: evt,
-		}, nil
-	})
+	oldJSONHash := feed.jsonHash
 	var err error
-	feed.json, err = json.Marshal(jsonFeed)
+	feed.json, feed.jsonHash, err = fs.generateJSONFeed(feed)
 	if err != nil {
-		log.Err(err).Msg("Failed to marshal JSON feed")
+		log.Err(err).Msg("Failed to generate JSON feed")
 		return
 	}
-	feedHash := sha256.Sum256(feed.json)
-	oldJSONHash := feed.jsonHash
-	feed.jsonHash = hex.EncodeToString(feedHash[:])
+
+	gorillaFeed := fs.generateGorillaFeed(feed)
+	var buf bytes.Buffer
+	if err = gorillaFeed.WriteRss(&buf); err != nil {
+		log.Err(err).Msg("Failed to generate RSS feed")
+	} else {
+		feed.rss = buf.Bytes()
+		rssHash := sha256.Sum256(feed.rss)
+		feed.rssHash = hex.EncodeToString(rssHash[:])
+	}
+	buf.Reset()
+	if err = gorillaFeed.WriteAtom(&buf); err != nil {
+		log.Err(err).Msg("Failed to generate Atom feed")
+	} else {
+		feed.atom = buf.Bytes()
+		atomHash := sha256.Sum256(feed.atom)
+		feed.atomHash = hex.EncodeToString(atomHash[:])
+	}
+
 	feed.lastUpdate = time.Now()
 	log.Info().
 		Str("old_json_hash", oldJSONHash).
 		Str("new_json_hash", feed.jsonHash).
-		Int("item_count", len(jsonFeed.Items)).
+		Int("item_count", feed.entries.Size()).
 		Dur("duration", time.Since(start)).
 		Msg("Feed updated successfully")
 }
