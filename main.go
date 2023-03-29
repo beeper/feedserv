@@ -105,10 +105,10 @@ func main() {
 				Str("new_feed_id", feedID).
 				Msg("Multiple feeds pointing at same room")
 		}
-		go func() {
+		go func(feed *FeedConfig) {
 			fs.InitSyncFeed(feed)
 			wg.Done()
-		}()
+		}(feed)
 		cfg.feedsByRoomID[feed.RoomID] = feed
 		allowedRoomIDs = append(allowedRoomIDs, feed.RoomID)
 	}
