@@ -1,0 +1,7 @@
+.idea/
+.vscode/
+*.log
+*.yaml
+!example-config.yaml
+!.pre-commit-config.yaml
+!.github/workflows/*.yaml

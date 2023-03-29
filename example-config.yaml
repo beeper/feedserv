@@ -1,0 +1,35 @@
+# Homeserver URL for connecting to the server. Can be a local URL.
+homeserver_url: https://matrix.org
+# Public homeserver URL used for linking to media from the feed.
+media_url: https://matrix.org
+# Username and password for logging into the bot account.
+user_id: "@example:matrix.org"
+password: example
+
+# IP and port where feedserv should listen.
+listen_address: :8080
+# Public address where feedserv can be reached.
+public_url: https://example.com
+
+# Logging config. See https://github.com/tulir/zeroconfig for details.
+logging:
+    min_level: debug
+    writers:
+        - type: stdout
+          format: pretty-colored
+
+# Feed configuration. Map from feed ID (HTTP endpoint) to configuration.
+feeds:
+    /example:
+        # Feeds must have either a room alias or a room ID.
+        # Room aliases are resolved on startup.
+        room_alias: "#homeowners:matrix.org"
+        #room_id: !iyIlInqJyxXrRmRHFx:matrix.org
+
+        # Optional language metadata for the feed.
+        language: en
+        # Home page metadata for the feed.
+        homepage: https://github.com/matrix-org/synapse
+        # Maximum number of entries to keep in the feed.
+        # This is also the number of entries that will be loaded on startup.
+        max_entries: 10
