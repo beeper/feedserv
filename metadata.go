@@ -104,7 +104,8 @@ func (fs *FeedServ) InitSyncFeed(feed *FeedConfig) {
 	if err != nil {
 		log.Fatal().Err(err).Msg("Failed to fetch room messages")
 	}
-	for _, evt := range resp.Chunk {
+	for i := len(resp.Chunk) - 1; i >= 0; i-- {
+		evt := resp.Chunk[i]
 		_ = evt.Content.ParseRaw(evt.Type)
 		feed.entries.Push(evt.ID, evt)
 	}
