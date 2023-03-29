@@ -45,10 +45,9 @@ type FeedConfig struct {
 	authors     map[id.UserID]JSONFeedAuthor
 	powers      *event.PowerLevelsEventContent
 
-	entryStartPtr int
-	entries       *util.RingBuffer[id.EventID, *event.Event]
-	lastUpdate    time.Time
-	updateLock    sync.RWMutex
+	entries    *util.RingBuffer[id.EventID, *event.Event]
+	lastUpdate time.Time
+	updateLock sync.RWMutex
 
 	rss      []byte
 	rssHash  string
