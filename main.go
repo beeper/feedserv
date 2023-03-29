@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"runtime"
 	"sync"
 	"syscall"
 
@@ -49,6 +50,11 @@ type FeedServ struct {
 	Log    *zerolog.Logger
 }
 
+var (
+	Commit    = "unknown"
+	BuildTime = ""
+)
+
 func main() {
 	cfg, err := loadConfig()
 	if err != nil {
@@ -60,6 +66,11 @@ func main() {
 		_, _ = fmt.Fprintln(os.Stderr, "Failed to compile log config:", err)
 		os.Exit(1)
 	}
+	log.Info().
+		Str("go_version", runtime.Version()).
+		Str("feedserv_commit", Commit).
+		Str("build_time", BuildTime).
+		Msg("Initializing feedserv")
 	cli, err := makeClient(cfg, log)
 	if err != nil {
 		log.Fatal().Err(err).Msg("Failed to initialize mautrix client")
@@ -80,6 +91,7 @@ func main() {
 	cfg.feedsByRoomID = make(map[id.RoomID]*FeedConfig)
 	wg.Add(len(cfg.Feeds))
 	allowedRoomIDs := make([]id.RoomID, 0, len(cfg.Feeds))
+	log.Info().Msg("Preparing feeds")
 	for feedID, feed := range cfg.Feeds {
 		if feed.RoomID == "" && feed.RoomAlias != "" {
 			resp, err := fs.Client.ResolveAlias(feed.RoomAlias)
@@ -169,6 +181,8 @@ func main() {
 			log.Debug().Msg("HTTP server finished cleanly")
 		}
 	}()
+
+	log.Info().Msg("Feedserv initialization complete")
 
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt, syscall.SIGTERM)

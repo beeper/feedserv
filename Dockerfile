@@ -3,7 +3,9 @@ FROM golang:1.20-alpine3.17 AS builder
 RUN apk add --no-cache ca-certificates git
 COPY . /build
 WORKDIR /build
-RUN CGO_ENABLED=0 go build -o /usr/bin/feedserv
+ARG COMMIT_HASH
+ENV COMMIT_HASH=${COMMIT_HASH}
+RUN CGO_ENABLED=0 go build -o /usr/bin/feedserv -ldflags "-X main.Commit=$COMMIT_HASH -X 'main.BuildTime=`date '+%b %_d %Y, %H:%M:%S'`'"
 
 FROM alpine:3.17
 
