@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/rs/zerolog"
-
 	"maunium.net/go/mautrix"
 	"maunium.net/go/mautrix/event"
 )
@@ -30,6 +29,12 @@ func (fs *FeedServ) HandleFeedEvent(_ mautrix.EventSource, evt *event.Event) {
 	feed.updateLock.Lock()
 	defer feed.updateLock.Unlock()
 
+	feed.pushEvent(log, evt)
+
+	fs.regenerateFeed(feed, log)
+}
+
+func (feed *FeedConfig) pushEvent(log zerolog.Logger, evt *event.Event) {
 	content := evt.Content.AsMessage()
 	if edits := content.RelatesTo.GetReplaceID(); edits != "" {
 		log = log.With().Str("edit_target_event_id", edits.String()).Logger()
@@ -53,8 +58,6 @@ func (fs *FeedServ) HandleFeedEvent(_ mautrix.EventSource, evt *event.Event) {
 	} else {
 		feed.entries.Push(evt.ID, evt)
 	}
-
-	fs.regenerateFeed(feed, log)
 }
 
 func (fs *FeedServ) regenerateFeed(feed *FeedConfig, log zerolog.Logger) {

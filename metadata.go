@@ -107,7 +107,7 @@ func (fs *FeedServ) InitSyncFeed(feed *FeedConfig) {
 	for i := len(resp.Chunk) - 1; i >= 0; i-- {
 		evt := resp.Chunk[i]
 		_ = evt.Content.ParseRaw(evt.Type)
-		feed.entries.Push(evt.ID, evt)
+		feed.pushEvent(log, evt)
 	}
 	log.Info().
 		Str("feed_title", feed.title).
