@@ -108,6 +108,10 @@ func main() {
 				Str("feed_id", feedID).
 				Msg("Resolved room ID for feed")
 		}
+		_, err = fs.Client.JoinRoomByID(feed.RoomID)
+		if err != nil {
+			log.Warn().Str("feed_id", feedID).Err(err).Msg("Error joining room")
+		}
 		feed.id = feedID
 		feed.entries = util.NewRingBuffer[id.EventID, *event.Event](feed.MaxEntries)
 		if existing, alreadyExists := cfg.feedsByRoomID[feed.RoomID]; alreadyExists {
