@@ -90,7 +90,7 @@ func (fs *FeedServ) regenerateFeed(feed *FeedConfig, log zerolog.Logger) {
 		feed.atomHash = hex.EncodeToString(atomHash[:])
 	}
 
-	feed.lastUpdate = time.Now()
+	feed.lastUpdate = time.Now().UTC()
 	log.Info().
 		Str("old_json_hash", oldJSONHash).
 		Str("new_json_hash", feed.jsonHash).

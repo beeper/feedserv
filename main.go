@@ -9,6 +9,7 @@ import (
 	"runtime"
 	"sync"
 	"syscall"
+	"time"
 
 	"github.com/rs/zerolog"
 	"golang.org/x/net/context"
@@ -114,6 +115,7 @@ func main() {
 		}
 		feed.id = feedID
 		feed.entries = util.NewRingBuffer[id.EventID, *event.Event](feed.MaxEntries)
+		feed.lastUpdate = time.Now().UTC()
 		if existing, alreadyExists := cfg.feedsByRoomID[feed.RoomID]; alreadyExists {
 			log.Fatal().
 				Str("room_id", feed.RoomID.String()).

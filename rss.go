@@ -45,7 +45,7 @@ func (fs *FeedServ) generateGorillaFeed(feed *FeedConfig) *feeds.Feed {
 		Description: feed.description,
 		Link:        &feeds.Link{Href: feedURL},
 		Items:       items,
-		Image:       &feeds.Image{Url: feed.icon},
+		Image:       &feeds.Image{Url: feed.icon, Link: feed.icon, Title: feed.title},
 		Updated:     feed.lastUpdate,
 	}
 }

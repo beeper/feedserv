@@ -76,7 +76,7 @@ func (fs *FeedServ) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	feed.updateLock.RUnlock()
 
-	w.Header().Add("Last-Modified", lastMod.UTC().Format(http.TimeFormat))
+	w.Header().Add("Last-Modified", lastMod.Format(http.TimeFormat))
 	w.Header().Add("ETag", hash)
 	w.Header().Add("Cache-Control", "public, max-age=60, s-maxage=60, stale-while-revalidate=60, stale-if-error=86400")
 
