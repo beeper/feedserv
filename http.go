@@ -30,7 +30,7 @@ func (fs *FeedServ) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		Str("cloudflare_remote_ip", r.Header.Get("CF-Connecting-IP")).
 		Logger()
 	if r.Method != http.MethodGet && r.Method != http.MethodHead {
-		log.Debug().Msg("Requested with incorrect HTTP method")
+		log.Warn().Msg("Requested with incorrect HTTP method")
 		w.Header().Add("Allow", "GET, HEAD")
 		writeError(w, http.StatusMethodNotAllowed, "Unsupported method %q", r.Method)
 		return
@@ -46,14 +46,14 @@ func (fs *FeedServ) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	case ".atom":
 		mime = AtomMime
 	default:
-		log.Debug().Msg("Requested unsupported feed type")
+		log.Warn().Msg("Requested unsupported feed type")
 		writeError(w, http.StatusNotFound, "Unsupported feed type %q", ext)
 		return
 	}
 
 	feed, ok := fs.Config.Feeds[feedPath]
 	if !ok {
-		log.Debug().Msg("Requested unknown feed")
+		log.Warn().Msg("Requested unknown feed")
 		writeError(w, http.StatusNotFound, "Feed %q not found", feedPath)
 		return
 	}
@@ -97,7 +97,7 @@ func (fs *FeedServ) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodHead {
 		_, _ = w.Write(data)
 	}
-	log.Debug().
+	log.Info().
 		Str("hash", hash).
 		Dur("duration", time.Since(start)).
 		Msg("Served feed")
