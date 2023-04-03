@@ -72,6 +72,7 @@ func (fs *FeedServ) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Add("Last-Modified", lastMod.UTC().Format(http.TimeFormat))
 	w.Header().Add("ETag", hash)
+	w.Header().Add("Cache-Control", "public, max-age=60, s-maxage=60, stale-while-revalidate=60, stale-if-error=86400")
 
 	if r.Header.Get("If-None-Match") == hash {
 		w.WriteHeader(http.StatusNotModified)
