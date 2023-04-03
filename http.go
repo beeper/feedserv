@@ -31,6 +31,7 @@ func (fs *FeedServ) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		Logger()
 	if r.Method != http.MethodGet && r.Method != http.MethodHead {
 		log.Debug().Msg("Requested with incorrect HTTP method")
+		w.Header().Add("Allow", "GET, HEAD")
 		writeError(w, http.StatusMethodNotAllowed, "Unsupported method %q", r.Method)
 		return
 	}
