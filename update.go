@@ -81,7 +81,7 @@ func (fs *FeedServ) regenerateFeed(feed *FeedConfig, log zerolog.Logger) {
 		rssHash := sha256.Sum256(feed.rss)
 		feed.rssHash = hex.EncodeToString(rssHash[:])
 	}
-	buf.Reset()
+	buf = bytes.Buffer{}
 	if err = gorillaFeed.WriteAtom(&buf); err != nil {
 		log.Err(err).Msg("Failed to generate Atom feed")
 	} else {

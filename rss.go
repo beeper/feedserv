@@ -29,13 +29,15 @@ func (fs *FeedServ) generateGorillaFeed(feed *FeedConfig) *feeds.Feed {
 		}
 		eventLink := evt.RoomID.EventURI(evt.ID, fs.Config.homeserverDomain).MatrixToURL()
 		return &feeds.Item{
-			Author:    &feeds.Author{Name: author.Name},
-			Link:      &feeds.Link{Href: eventLink},
-			Id:        eventLink,
-			Updated:   time.UnixMilli(evt.Timestamp).UTC(),
-			Created:   evt.Mautrix.EditedAt,
-			Content:   contentText,
-			Enclosure: attachment,
+			Author:      &feeds.Author{Name: author.Name},
+			Link:        &feeds.Link{Href: eventLink},
+			Id:          eventLink,
+			Updated:     time.UnixMilli(evt.Timestamp).UTC(),
+			Created:     evt.Mautrix.EditedAt,
+			Title:       feed.title,
+			Content:     contentText,
+			Description: contentText,
+			Enclosure:   attachment,
 		}, nil
 	})
 	return &feeds.Feed{
