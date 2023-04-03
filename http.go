@@ -26,8 +26,14 @@ func (fs *FeedServ) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	feedPath := strings.ToLower(r.URL.Path)
 	log := fs.Log.With().
 		Str("feed_path", feedPath).
+		Str("method", r.Method).
 		Str("cloudflare_remote_ip", r.Header.Get("CF-Connecting-IP")).
 		Logger()
+	if r.Method != http.MethodGet && r.Method != http.MethodHead {
+		log.Debug().Msg("Requested with incorrect HTTP method")
+		writeError(w, http.StatusMethodNotAllowed, "Unsupported method %q", r.Method)
+		return
+	}
 	ext := path.Ext(feedPath)
 	feedPath = feedPath[:len(feedPath)-len(ext)]
 	var mime string
@@ -87,7 +93,9 @@ func (fs *FeedServ) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Add("Content-Type", mime)
 	w.WriteHeader(http.StatusOK)
-	_, _ = w.Write(data)
+	if r.Method != http.MethodHead {
+		_, _ = w.Write(data)
+	}
 	log.Debug().
 		Str("hash", hash).
 		Dur("duration", time.Since(start)).
