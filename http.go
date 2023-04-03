@@ -22,7 +22,12 @@ func writeError(w http.ResponseWriter, status int, error string, args ...any) {
 }
 
 func (fs *FeedServ) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	start := time.Now()
 	feedPath := strings.ToLower(r.URL.Path)
+	log := fs.Log.With().
+		Str("feed_path", feedPath).
+		Str("cloudflare_remote_ip", r.Header.Get("CF-Connecting-IP")).
+		Logger()
 	ext := path.Ext(feedPath)
 	feedPath = feedPath[:len(feedPath)-len(ext)]
 	var mime string
@@ -34,12 +39,14 @@ func (fs *FeedServ) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	case ".atom":
 		mime = AtomMime
 	default:
+		log.Debug().Msg("Requested unsupported feed type")
 		writeError(w, http.StatusNotFound, "Unsupported feed type %q", ext)
 		return
 	}
 
 	feed, ok := fs.Config.Feeds[feedPath]
 	if !ok {
+		log.Debug().Msg("Requested unknown feed")
 		writeError(w, http.StatusNotFound, "Feed %q not found", feedPath)
 		return
 	}
@@ -80,4 +87,8 @@ func (fs *FeedServ) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("Content-Type", mime)
 	w.WriteHeader(http.StatusOK)
 	_, _ = w.Write(data)
+	log.Debug().
+		Str("hash", hash).
+		Dur("duration", time.Since(start)).
+		Msg("Served feed")
 }
