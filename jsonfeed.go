@@ -2,7 +2,6 @@ package main
 
 import (
 	"crypto/sha256"
-	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"time"
@@ -118,6 +117,5 @@ func (fs *FeedServ) generateJSONFeed(feed *FeedConfig) ([]byte, string, error) {
 	if err != nil {
 		return nil, "", fmt.Errorf("failed to marshal JSON feed: %w", err)
 	}
-	jsonHash := sha256.Sum256(jsonData)
-	return jsonData, hex.EncodeToString(jsonHash[:]), nil
+	return jsonData, fmt.Sprintf(`"%x"`, sha256.Sum256(jsonData)), nil
 }

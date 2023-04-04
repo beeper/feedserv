@@ -3,7 +3,7 @@ package main
 import (
 	"bytes"
 	"crypto/sha256"
-	"encoding/hex"
+	"fmt"
 	"time"
 
 	"github.com/rs/zerolog"
@@ -78,16 +78,14 @@ func (fs *FeedServ) regenerateFeed(feed *FeedConfig, log zerolog.Logger) {
 		log.Err(err).Msg("Failed to generate RSS feed")
 	} else {
 		feed.rss = buf.Bytes()
-		rssHash := sha256.Sum256(feed.rss)
-		feed.rssHash = hex.EncodeToString(rssHash[:])
+		feed.rssHash = fmt.Sprintf(`"%x"`, sha256.Sum256(feed.rss))
 	}
 	buf = bytes.Buffer{}
 	if err = gorillaFeed.WriteAtom(&buf); err != nil {
 		log.Err(err).Msg("Failed to generate Atom feed")
 	} else {
 		feed.atom = buf.Bytes()
-		atomHash := sha256.Sum256(feed.atom)
-		feed.atomHash = hex.EncodeToString(atomHash[:])
+		feed.atomHash = fmt.Sprintf(`"%x"`, sha256.Sum256(feed.atom))
 	}
 
 	feed.lastUpdate = time.Now().UTC()
