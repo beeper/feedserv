@@ -27,6 +27,12 @@ type JSONFeed struct {
 	Authors     []JSONFeedAuthor `json:"authors,omitempty"`
 	Language    string           `json:"language,omitempty"`
 	Expired     bool             `json:"expired,omitempty"`
+
+	MatrixIcon MatrixIcon `json:"_matrix_icon"`
+}
+
+type MatrixIcon struct {
+	URI id.ContentURI `json:"uri"`
 }
 
 type JSONFeedItem struct {
@@ -86,6 +92,7 @@ func (fs *FeedServ) generateJSONFeed(feed *FeedConfig) ([]byte, string, error) {
 		Title:       feed.title,
 		Description: feed.description,
 		Icon:        feed.icon,
+		MatrixIcon:  MatrixIcon{URI: feed.iconMXC},
 		Homepage:    feed.Homepage,
 		Language:    feed.Language,
 		FeedURL:     feedURL,

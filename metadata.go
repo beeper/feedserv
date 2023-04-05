@@ -34,6 +34,7 @@ func (fs *FeedServ) HandleMetadata(_ mautrix.EventSource, evt *event.Event) {
 		log.Debug().Str("feed_description", feed.description).Msg("Updated feed description")
 	case event.StateRoomAvatar:
 		feed.icon = fs.Media.GetDownloadURL(evt.Content.AsRoomAvatar().URL)
+		feed.iconMXC = evt.Content.AsRoomAvatar().URL
 		log.Debug().Str("feed_icon", feed.icon).Msg("Updated feed icon")
 	case event.StatePowerLevels:
 		feed.powers = evt.Content.AsPowerLevels()
@@ -88,6 +89,7 @@ func (fs *FeedServ) InitSyncFeed(feed *FeedConfig) {
 	}
 	if roomAvatarEvt != nil {
 		feed.icon = fs.Media.GetDownloadURL(roomAvatarEvt.Content.AsRoomAvatar().URL)
+		feed.iconMXC = roomAvatarEvt.Content.AsRoomAvatar().URL
 	}
 
 	feed.powers = state[event.StatePowerLevels][""].Content.AsPowerLevels()

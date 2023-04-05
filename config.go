@@ -42,6 +42,7 @@ type FeedConfig struct {
 	title       string
 	description string
 	icon        string
+	iconMXC     id.ContentURI
 	authors     map[id.UserID]JSONFeedAuthor
 	powers      *event.PowerLevelsEventContent
 
