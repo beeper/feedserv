@@ -67,6 +67,10 @@ type JSONFeedAttachment struct {
 
 func (fs *FeedServ) generateJSONFeed(feed *FeedConfig) ([]byte, string, error) {
 	feedURL := fs.Config.PublicURL + feed.id + ".json"
+	allAuthors := make([]JSONFeedAuthor, 0, len(feed.authors))
+	for _, author := range feed.authors {
+		allAuthors = append(allAuthors, author)
+	}
 	jsonFeed := &JSONFeed{
 		Version:     JSONFeedVersion,
 		Title:       feed.title,
@@ -75,6 +79,7 @@ func (fs *FeedServ) generateJSONFeed(feed *FeedConfig) ([]byte, string, error) {
 		Homepage:    feed.Homepage,
 		Language:    feed.Language,
 		FeedURL:     feedURL,
+		Authors:     allAuthors,
 	}
 	jsonFeed.Items, _ = util.MapRingBuffer(feed.entries, func(evtID id.EventID, evt *event.Event) (JSONFeedItem, error) {
 		content := evt.Content.AsMessage()
