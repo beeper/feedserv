@@ -54,7 +54,12 @@ type JSONFeedAuthor struct {
 	URL    string `json:"url,omitempty"`
 	Avatar string `json:"avatar,omitempty"`
 
-	AvatarMXC id.ContentURI `json:"_avatar_mxc,omitempty"`
+	MatrixProfile *JSONFeedMatrixProfile `json:"_matrix_profile,omitempty"`
+}
+
+type JSONFeedMatrixProfile struct {
+	UserID id.UserID           `json:"user_id,omitempty"`
+	Avatar id.ContentURIString `json:"avatar_url,omitempty"`
 }
 
 type JSONFeedAttachment struct {

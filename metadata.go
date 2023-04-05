@@ -43,10 +43,13 @@ func (fs *FeedServ) HandleMetadata(_ mautrix.EventSource, evt *event.Event) {
 		if feed.powers.GetUserLevel(userID) > feed.powers.GetEventLevel(event.EventMessage) {
 			profile := evt.Content.AsMember()
 			feed.authors[userID] = JSONFeedAuthor{
-				Name:      profile.Displayname,
-				URL:       userID.URI().MatrixToURL(),
-				Avatar:    fs.Media.GetDownloadURL(profile.AvatarURL.ParseOrIgnore()),
-				AvatarMXC: profile.AvatarURL.ParseOrIgnore(),
+				Name:   profile.Displayname,
+				URL:    userID.URI().MatrixToURL(),
+				Avatar: fs.Media.GetDownloadURL(profile.AvatarURL.ParseOrIgnore()),
+				MatrixProfile: &JSONFeedMatrixProfile{
+					UserID: userID,
+					Avatar: profile.AvatarURL,
+				},
 			}
 			log.Debug().
 				Str("user_id", userID.String()).
@@ -93,10 +96,13 @@ func (fs *FeedServ) InitSyncFeed(feed *FeedConfig) {
 		if level >= feed.powers.GetEventLevel(event.EventMessage) {
 			profile := state[event.StateMember][userID.String()].Content.AsMember()
 			feed.authors[userID] = JSONFeedAuthor{
-				Name:      profile.Displayname,
-				URL:       userID.URI().MatrixToURL(),
-				Avatar:    fs.Media.GetDownloadURL(profile.AvatarURL.ParseOrIgnore()),
-				AvatarMXC: profile.AvatarURL.ParseOrIgnore(),
+				Name:   profile.Displayname,
+				URL:    userID.URI().MatrixToURL(),
+				Avatar: fs.Media.GetDownloadURL(profile.AvatarURL.ParseOrIgnore()),
+				MatrixProfile: &JSONFeedMatrixProfile{
+					UserID: userID,
+					Avatar: profile.AvatarURL,
+				},
 			}
 		}
 	}
