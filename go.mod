@@ -8,7 +8,7 @@ require (
 	go.mau.fi/zeroconfig v0.1.2
 	golang.org/x/net v0.8.0
 	gopkg.in/yaml.v3 v3.0.1
-	maunium.net/go/mautrix v0.15.1-0.20230329120316-87ba0387ab25
+	maunium.net/go/mautrix v0.15.1-0.20230405144343-a47718edca66
 )
 
 require (

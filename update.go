@@ -54,6 +54,7 @@ func (feed *FeedConfig) pushEvent(log zerolog.Logger, evt *event.Event) {
 			existingEvt.Content.Parsed = content.NewContent
 			existingEvt.Type = evt.Type
 			existingEvt.Mautrix.EditedAt = time.UnixMilli(evt.Timestamp).UTC()
+			existingEvt.Mautrix.LastEditID = evt.ID
 		}
 	} else {
 		feed.entries.Push(evt.ID, evt)

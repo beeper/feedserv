@@ -46,7 +46,12 @@ type JSONFeedItem struct {
 	Language      string               `json:"language,omitempty"`
 	Attachments   []JSONFeedAttachment `json:"attachments,omitempty"`
 
-	MatrixEvent *event.Event `json:"_matrix_event,omitempty"`
+	MatrixEvent      *event.Event     `json:"_matrix_event,omitempty"`
+	MatrixEventExtra MatrixEventExtra `json:"_matrix_event_extra,omitempty"`
+}
+
+type MatrixEventExtra struct {
+	LastEditID id.EventID `json:"last_edit_id,omitempty"`
 }
 
 type JSONFeedAuthor struct {
@@ -121,6 +126,9 @@ func (fs *FeedServ) generateJSONFeed(feed *FeedConfig) ([]byte, string, error) {
 			DateModified:  editedAt,
 
 			MatrixEvent: evt,
+			MatrixEventExtra: MatrixEventExtra{
+				LastEditID: evt.Mautrix.LastEditID,
+			},
 		}, nil
 	})
 	jsonData, err := json.Marshal(jsonFeed)
