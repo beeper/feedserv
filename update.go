@@ -3,7 +3,9 @@ package main
 import (
 	"bytes"
 	"crypto/sha256"
+	"encoding/json"
 	"fmt"
+	"net/http"
 	"time"
 
 	"github.com/rs/zerolog"
@@ -32,6 +34,10 @@ func (fs *FeedServ) HandleFeedEvent(_ mautrix.EventSource, evt *event.Event) {
 	feed.pushEvent(log, evt)
 
 	fs.regenerateFeed(feed, log)
+
+	if err := fs.purgeCloudflareCache(feed); err != nil {
+		log.Error().Err(err).Msg("Failed to purge Cloudflare cache")
+	}
 }
 
 func (feed *FeedConfig) pushEvent(log zerolog.Logger, evt *event.Event) {
@@ -96,4 +102,42 @@ func (fs *FeedServ) regenerateFeed(feed *FeedConfig, log zerolog.Logger) {
 		Int("item_count", feed.entries.Size()).
 		Dur("duration", time.Since(start)).
 		Msg("Feed updated successfully")
+}
+
+var cloudflareClient = &http.Client{Timeout: time.Second * 10}
+
+type cloudflarePurgeRequest struct {
+	Files []string `json:"files"`
+}
+
+func (fs *FeedServ) purgeCloudflareCache(feed *FeedConfig) error {
+	if fs.Config.CloudflareToken == "" {
+		return nil
+	}
+
+	data := cloudflarePurgeRequest{[]string{
+		fs.Config.PublicURL + "/" + feed.id,
+		fs.Config.PublicURL + "/" + feed.id + ".json",
+		fs.Config.PublicURL + "/" + feed.id + ".rss",
+		fs.Config.PublicURL + "/" + feed.id + ".atom",
+	}}
+	body, err := json.Marshal(data)
+	if err != nil {
+		return err
+	}
+
+	url := "https://api.cloudflare.com/client/v4/zones/" + fs.Config.CloudflareZoneID + "/purge_cache"
+	req, err := http.NewRequest(http.MethodPost, url, bytes.NewBuffer(body))
+	if err != nil {
+		return err
+	}
+	req.Header.Set("Authorization", "Bearer "+fs.Config.CloudflareToken)
+
+	resp, err := cloudflareClient.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	return nil
 }

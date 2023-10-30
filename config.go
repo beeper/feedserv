@@ -25,6 +25,9 @@ type Config struct {
 	ListenAddress string `yaml:"listen_address"`
 	PublicURL     string `yaml:"public_url"`
 
+	CloudflareZoneID string `yaml:"cloudflare_zone_id"`
+	CloudflareToken  string `yaml:"cloudflare_token"`
+
 	Feeds         map[string]*FeedConfig `yaml:"feeds"`
 	feedsByRoomID map[id.RoomID]*FeedConfig
 
