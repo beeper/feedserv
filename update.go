@@ -117,10 +117,10 @@ func (fs *FeedServ) purgeCloudflareCache(feed *FeedConfig) error {
 	}
 
 	data := cloudflarePurgeRequest{[]string{
-		fs.Config.PublicURL + "/" + feed.id,
-		fs.Config.PublicURL + "/" + feed.id + ".json",
-		fs.Config.PublicURL + "/" + feed.id + ".rss",
-		fs.Config.PublicURL + "/" + feed.id + ".atom",
+		fs.Config.PublicURL + feed.id,
+		fs.Config.PublicURL + feed.id + ".json",
+		fs.Config.PublicURL + feed.id + ".rss",
+		fs.Config.PublicURL + feed.id + ".atom",
 	}}
 	body, err := json.Marshal(data)
 	if err != nil {
