@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 	"maunium.net/go/mautrix"
 	"maunium.net/go/mautrix/event"
 )
@@ -127,6 +128,8 @@ func (fs *FeedServ) purgeCloudflareCache(feed *FeedConfig) error {
 	}
 
 	url := "https://api.cloudflare.com/client/v4/zones/" + fs.Config.CloudflareZoneID + "/purge_cache"
+	log.Debug().Msgf("Calling Cloudflare purge: %s with body: %s", url, body)
+
 	req, err := http.NewRequest(http.MethodPost, url, bytes.NewBuffer(body))
 	if err != nil {
 		return err
@@ -138,6 +141,8 @@ func (fs *FeedServ) purgeCloudflareCache(feed *FeedConfig) error {
 		return err
 	}
 	defer resp.Body.Close()
+
+	log.Debug().Int("status_code", resp.StatusCode).Msg("Got Cloudflare purge response")
 
 	return nil
 }
