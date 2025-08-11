@@ -41,8 +41,10 @@ func (fs *FeedServ) HandleMetadata(_ mautrix.EventSource, evt *event.Event) {
 		log.Debug().Msg("Updated cached power levels")
 	case event.StateMember:
 		userID := id.UserID(evt.GetStateKey())
-		if feed.powers.GetUserLevel(userID) > feed.powers.GetEventLevel(event.EventMessage) {
-			profile := evt.Content.AsMember()
+		profile := evt.Content.AsMember()
+		if profile.Membership == event.MembershipLeave {
+			delete(feed.authors, userID)
+		} else if feed.powers.GetUserLevel(userID) > feed.powers.GetEventLevel(event.EventMessage) {
 			feed.authors[userID] = JSONFeedAuthor{
 				Name:   profile.Displayname,
 				URL:    userID.URI().MatrixToURL(),
@@ -95,8 +97,8 @@ func (fs *FeedServ) InitSyncFeed(feed *FeedConfig) {
 	feed.powers = state[event.StatePowerLevels][""].Content.AsPowerLevels()
 	feed.authors = make(map[id.UserID]JSONFeedAuthor)
 	for userID, level := range feed.powers.Users {
-		if level >= feed.powers.GetEventLevel(event.EventMessage) {
-			profile := state[event.StateMember][userID.String()].Content.AsMember()
+		profile := state[event.StateMember][userID.String()].Content.AsMember()
+		if level >= feed.powers.GetEventLevel(event.EventMessage) && profile.Membership != event.MembershipLeave {
 			feed.authors[userID] = JSONFeedAuthor{
 				Name:   profile.Displayname,
 				URL:    userID.URI().MatrixToURL(),
